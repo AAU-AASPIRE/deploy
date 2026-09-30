@@ -1,20 +1,20 @@
 """Raspberry Pi 4 helper: install the cross-built FORTE, blink an LED, run a module, read the log.
 
-    python 4diac/tools/pi.py install                  # copy FORTE to the Pi, build and start its container
-    python 4diac/tools/pi.py stop | start | status    # the FORTE container
-    python 4diac/tools/pi.py blink                    # blink the green on-board LED (ACT)
-    python 4diac/tools/pi.py blink --line 17          # blink an LED on header pin 11 (GPIO17)
-    python 4diac/tools/pi.py module                   # run the module (modules/filling.yaml) on its Pi
-    python 4diac/tools/pi.py module --spec modules/stoppering.yaml --print   # show the boot file
-    python 4diac/tools/pi.py log
+    python deploy/pi.py install                  # copy FORTE to the Pi, build and start its container
+    python deploy/pi.py stop | start | status    # the FORTE container
+    python deploy/pi.py blink                    # blink the green on-board LED (ACT)
+    python deploy/pi.py blink --line 17          # blink an LED on header pin 11 (GPIO17)
+    python deploy/pi.py module                   # run the module (cell/modules/filling.yaml) on its Pi
+    python deploy/pi.py module --spec cell/modules/stoppering.yaml --print   # show the boot file
+    python deploy/pi.py log
 
 The Pi's address and login are the ``pi`` target's ``host`` and ``user`` in the module spec
-(modules/filling.yaml), or ``--host``/``--user``. Any 64-bit Linux on the Pi works (Raspberry Pi OS,
-Ubuntu); the login needs SSH key access and read/write access to /dev/gpiochip0 (group ``gpio``
-on Raspberry Pi OS, ``dialout`` on Ubuntu). Build FORTE first:
-``4diac/tools/build-modules.ps1 -Config pi/modules-pi -SkipValidate``.
+(cell/modules/filling.yaml), or ``--host``/``--user``. Any 64-bit Linux on the Pi works (Raspberry
+Pi OS, Ubuntu); the login needs SSH key access and read/write access to /dev/gpiochip0 (group
+``gpio`` on Raspberry Pi OS, ``dialout`` on Ubuntu). Build FORTE first:
+``runtime/build-modules.ps1 -Config pi/modules-pi -SkipValidate``.
 
-FORTE runs in a Docker container (4diac/tools/pi/compose.yaml, copied to ~/forte on the Pi) with
+FORTE runs in a Docker container (deploy/pi/compose.yaml, copied to ~/forte on the Pi) with
 host networking and /dev/gpiochip0; it restarts after a reboot unless stopped. The login needs
 to be in group ``docker``. On the Pi: ``cd ~/forte && docker compose ps | logs -f | stop | start``.
 sudo is needed only for the on-board LED; it asks on the terminal or reads ``PI_SUDO_PASSWORD``.
@@ -39,17 +39,16 @@ import subprocess
 import sys
 import time
 
-TOOLS = Path(__file__).resolve().parent
-ROOT = TOOLS.parents[1]
-sys.path.insert(0, str(ROOT))
-from iec61499_mgmt.bootfile import boot_file, deployment  # noqa: E402
-from iec61499_mgmt.protocol import Client, Command, ProtocolError  # noqa: E402
-from iec61499_mgmt.sysfile import load_application  # noqa: E402
-from modgen import load  # noqa: E402
-from modgen.module import app_name  # noqa: E402
+from iec61499_mgmt.bootfile import boot_file, deployment
+from iec61499_mgmt.protocol import Client, Command, ProtocolError
+from iec61499_mgmt.sysfile import load_application
+from modgen import SPECS, load, system_file
+from modgen.module import app_name
 
-SPEC = ROOT / "modules" / "filling.yaml"
-FORTE = TOOLS / "fbe" / "build" / "modules-pi" / "output" / "bin" / "forte"
+TOOLS = Path(__file__).resolve().parent
+ROOT = TOOLS.parent
+SPEC = SPECS / "filling.yaml"
+FORTE = ROOT / "runtime" / "fbe" / "build" / "modules-pi" / "output" / "bin" / "forte"
 DOCKER = TOOLS / "pi"          # Dockerfile, compose.yaml, .dockerignore
 GPIOCHIP = "eclipse4diac::io::gpiochip::GPIOChip"
 PWMCHIP = "eclipse4diac::io::pwmsysfs::PWMChip"
@@ -172,7 +171,7 @@ def blink(args):
 def module(args):
     """Run the module's application for the target (replaces whatever runs on the Pi)."""
     spec = load(args.spec)
-    app = load_application(ROOT / "4diac" / spec.project / f"{spec.project}.sys", app_name(spec, args.target))
+    app = load_application(system_file(spec.project), app_name(spec, args.target))
     commands = deployment(app)
     if args.print:
         sys.stdout.buffer.write(boot_file(commands).encode("utf-8"))
