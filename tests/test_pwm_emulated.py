@@ -2,8 +2,8 @@
 emulation in Docker against a fake /sys/class/pwm tree: a PWMChip configures the channel and a QW
 sets the duty cycle; so does an IO_AO whose address names the channel (it sets it up itself).
 
-    runtime/build-modules.ps1 -Config pi/modules-pi -SkipValidate
-    python -m pytest deploy/tests/test_pwm_emulated.py --pi-forte-exe runtime/fbe/build/modules-pi/output/bin/forte
+    ../forte-runtime/build-modules.ps1 -Config pi/modules-pi -SkipValidate
+    python -m pytest tests/test_pwm_emulated.py --pi-forte-exe ../forte-runtime/fbe/build/modules-pi/output/bin/forte
 """
 from contextlib import contextmanager
 from pathlib import Path

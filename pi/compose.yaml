@@ -39,7 +39,7 @@ services:
       - "${LDS_HOST:-lds.invalid}:${LDS_IP:-127.0.0.1}"
     devices:
       # GPIO lines for GPIOChip (the container runs as root): the chip of the 40-pin header, as
-      # chip 0. runtime/install.sh writes which one it is to .env (4 on a Pi 5 with an older kernel).
+      # chip 0. forte-runtime's install.sh writes which one it is to .env (4 on a Pi 5 with an older kernel).
       - ${GPIOCHIP:-/dev/gpiochip0}:/dev/gpiochip0
     volumes:
       - ./boot:/forte                  # forte.fboot: the program FORTE loads at start

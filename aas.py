@@ -1,15 +1,15 @@
-"""The lab's AAS stack on this computer (deploy/aas/compose.yaml): BaSyx, the DMP, InfluxDB, the skill service.
+"""The lab's AAS stack on this computer (aas/compose.yaml): BaSyx, the DMP, InfluxDB, the skill service.
 
-    python deploy/aas.py up          # write the secrets to deploy/aas/.env if there are none, start it all
-    python deploy/aas.py up --agents # ... with the line's agents (the multi-agent orchestrator)
-    python deploy/aas.py status      # the containers, and what the DMP made of the AIMCs
-    python deploy/aas.py status FillingModuleAAS    # ... and why each of its mappings that does not run does not
-    python deploy/aas.py rows FillingModuleAAS      # the latest row of each of a module's time series
-    python deploy/aas.py logs dmp
-    python deploy/aas.py down        # stop it (InfluxDB keeps its data in a volume)
+    python aas.py up          # write the secrets to aas/.env if there are none, start it all
+    python aas.py up --agents # ... with the line's agents (the multi-agent orchestrator)
+    python aas.py status      # the containers, and what the DMP made of the AIMCs
+    python aas.py status FillingModuleAAS    # ... and why each of its mappings that does not run does not
+    python aas.py rows FillingModuleAAS      # the latest row of each of a module's time series
+    python aas.py logs dmp
+    python aas.py down        # stop it (InfluxDB keeps its data in a volume)
 
 Web UI http://localhost:3000, AAS environment http://localhost:8081, DMP http://localhost:8085,
-InfluxDB http://localhost:8086 (user admin; password and token in deploy/aas/.env, never committed),
+InfluxDB http://localhost:8086 (user admin; password and token in aas/.env, never committed),
 skill service http://localhost:8090 (the web UI's matching and planning), with --agents their orders
 at http://localhost:8095/orders and XMPP on 5222.
 

@@ -1,9 +1,9 @@
 """Publish every AAS the lab stack shows, created or replaced: aas-model's lab instances, the example
 line, and the modules on their Pis.
 
-    python deploy/publish.py                                # to the stack on this PC (http://localhost:8081)
-    python deploy/publish.py --only aas-model               # one part: aas-model | line | modules
-    python deploy/publish.py --url http://<server>:8081     # the lab's server: only with the user's go
+    python publish.py                                # to the stack on this PC (http://localhost:8081)
+    python publish.py --only aas-model               # one part: aas-model | line | modules
+    python publish.py --url http://<server>:8081     # the lab's server: only with the user's go
 
 1. aas-model: the lab's resources as aas-model writes them (``aas_model.resource_instances``,
    ``RESOURCE_FACTORIES``): the stations of the industrial line (Syntegon, Cytiva, IMA, Optima,
@@ -27,8 +27,8 @@ from pathlib import Path
 import sys
 import tempfile
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "cell" / "examples"))
+LINE = Path(__file__).resolve().parents[1] / "aseptic-line"      # beside this repository
+sys.path.insert(0, str(LINE / "cell" / "examples"))
 
 from basyx.aas.adapter.json import json_serialization          # noqa: E402
 
@@ -62,7 +62,7 @@ def modules_beside_the_line() -> dict[str, dict]:
     found = {}
     for path in BESIDE_THE_LINE:
         spec = load(path)
-        for env in (model.build(p) for p in profiles.describe_all(spec, "pi", spec_path=path.relative_to(ROOT).as_posix())):
+        for env in (model.build(p) for p in profiles.describe_all(spec, "pi", spec_path=path.relative_to(LINE).as_posix())):
             found[env["assetAdministrationShells"][0]["idShort"]] = env
     return found
 

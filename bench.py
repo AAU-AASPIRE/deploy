@@ -1,13 +1,13 @@
 """Bench check of a module's linear axis on its Raspberry Pi: the home switch, homing and moves, every
 motion under a watchdog. Only with someone at the bench: Reset and Home drive the axis to its switch.
 
-    python deploy/bench.py status                     # no motion: the module, the axis and the PWM channels
-    python deploy/bench.py switch                     # no motion: the home switch while you press it by hand
-    python deploy/bench.py home                       # Reset, which homes the axis; stopped if not home in time
-    python deploy/bench.py move --to 10               # MoveAxis 10 mm away from the switch, then Home
-    python deploy/bench.py move --to 40 --stay        # ... and stay there, e.g. to measure a position
-    python deploy/bench.py run --skill Capping --spec cell/modules/capping.yaml   # a module level skill
-    python deploy/bench.py home --spec cell/modules/stoppering.yaml --limit 12
+    python bench.py status                     # no motion: the module, the axis and the PWM channels
+    python bench.py switch                     # no motion: the home switch while you press it by hand
+    python bench.py home                       # Reset, which homes the axis; stopped if not home in time
+    python bench.py move --to 10               # MoveAxis 10 mm away from the switch, then Home
+    python bench.py move --to 40 --stay        # ... and stay there, e.g. to measure a position
+    python bench.py run --skill Capping --spec cell/modules/capping.yaml   # a module level skill
+    python bench.py home --spec cell/modules/stoppering.yaml --limit 12
 
 The module, its Pi, its axis (the equipment with a position), the axis's home switch and its speed
 come from the module spec (default cell/modules/filling.yaml, target pi). A motion's watchdog is a
@@ -25,8 +25,8 @@ import sys
 import threading
 import time
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "cell" / "sim"))
+ROOT = Path(__file__).resolve().parents[1]                # AAU-AASPIRE: the repositories side by side
+sys.path.insert(0, str(ROOT / "aseptic-line" / "cell" / "sim"))
 from modgen import SPECS, load                        # noqa: E402
 from modgen.library import SKILL_STATES, STATES      # noqa: E402
 
@@ -74,10 +74,10 @@ class Bench:
         encoder), so a carriage moved by hand off the switch still reads 0 mm, and a move to 40 mm would
         start from wherever it is. At 0 mm the switch must be pressed."""
         if not self.value("Homed"):
-            sys.exit("Not referenced: home it first (python deploy/bench.py home)")
+            sys.exit("Not referenced: home it first (python bench.py home)")
         if abs(self.value("ActualPosition")) < 0.5 and not self.value(self.axis.home):
             sys.exit(f"The axis reads 0 mm but {self.axis.home} is free: it was moved by hand. Home it first "
-                     "(python deploy/bench.py home)")
+                     "(python bench.py home)")
 
     def show(self) -> str:
         home, homed, position = (self.value(i) for i in (self.axis.home, "Homed", "ActualPosition"))
@@ -187,7 +187,7 @@ def move(bench, args):
                          f"MoveAxis {args.to} mm"):
         return
     if args.stay:
-        print(f"Staying at {args.to} mm. Home it afterwards: python deploy/bench.py home")
+        print(f"Staying at {args.to} mm. Home it afterwards: python bench.py home")
         return
     bench.guarded(bench.axis.seconds(args.to), lambda: bench.ua.call("Skills/Home/Start", SESSION),
                   lambda: bench.value(bench.axis.home), "Home (the switch reached)")

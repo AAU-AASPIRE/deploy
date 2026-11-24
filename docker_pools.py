@@ -1,7 +1,7 @@
 """Keep Docker's own networks out of the lab network (172.20.0.0/15), on the lab server and every Pi.
 
-    ssh <login>@<host> 'sudo python3 -' < deploy/docker_pools.py       # then: python deploy/pi.py ... as before
-    python deploy/pi.py pools --spec cell/modules/capping.yaml          # the same, for a module's Pi
+    ssh <login>@<host> 'sudo python3 -' < deploy/docker_pools.py       # then: python pi.py ... as before
+    python pi.py pools --spec cell/modules/capping.yaml          # the same, for a module's Pi
 
 Docker takes 172.17.0.0/16 for its bridge and hands Compose networks 172.18 to 172.31, so on any host a
 network can land on 172.20.x or 172.21.x, and that host then no longer reaches the lab network. This

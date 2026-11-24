@@ -1,19 +1,19 @@
 """Raspberry Pi helper (Pi 4 and 5): install the cross-built FORTE, blink an LED, run a module, read the log.
 
-    python deploy/pi.py install                  # copy FORTE to the Pi, build and start its container
-    python deploy/pi.py stop | start | status    # the FORTE container
-    python deploy/pi.py blink                    # blink the green on-board LED (ACT)
-    python deploy/pi.py blink --line 17          # blink an LED on header pin 11 (GPIO17)
-    python deploy/pi.py module                   # run the module (cell/modules/filling.yaml) on its Pi
-    python deploy/pi.py module --spec cell/modules/stoppering.yaml --print   # show the boot file
-    python deploy/pi.py log
-    python deploy/pi.py pools                    # Docker's own networks out of the lab network (172.20.0.0/15)
+    python pi.py install                  # copy FORTE to the Pi, build and start its container
+    python pi.py stop | start | status    # the FORTE container
+    python pi.py blink                    # blink the green on-board LED (ACT)
+    python pi.py blink --line 17          # blink an LED on header pin 11 (GPIO17)
+    python pi.py module                   # run the module (cell/modules/filling.yaml) on its Pi
+    python pi.py module --spec cell/modules/stoppering.yaml --print   # show the boot file
+    python pi.py log
+    python pi.py pools                    # Docker's own networks out of the lab network (172.20.0.0/15)
 
 The Pi's address and login are the ``pi`` target's ``host`` and ``user`` in the module spec
 (cell/modules/filling.yaml), or ``--host``/``--user``. Any 64-bit Linux on the Pi works (Raspberry
 Pi OS, Ubuntu); the login needs SSH key access and read/write access to /dev/gpiochip0 (group
 ``gpio`` on Raspberry Pi OS, ``dialout`` on Ubuntu). Build FORTE first:
-``runtime/build-modules.ps1 -Config pi/modules-pi -SkipValidate``.
+forte-runtime's ``build-modules.ps1 -Config pi/modules-pi -SkipValidate``.
 
 FORTE runs in a Docker container (deploy/pi/compose.yaml, copied to ~/forte on the Pi) with
 host networking and /dev/gpiochip0; it restarts after a reboot unless stopped. The login needs
@@ -48,9 +48,9 @@ from modgen import SPECS, load, system_file
 from modgen.module import app_name
 
 TOOLS = Path(__file__).resolve().parent
-ROOT = TOOLS.parent
+ROOT = TOOLS.parent                # AAU-AASPIRE: the repositories side by side
 SPEC = SPECS / "filling.yaml"
-FORTE = ROOT / "runtime" / "fbe" / "build" / "modules-pi" / "output" / "bin" / "forte"
+FORTE = ROOT / "forte-runtime" / "fbe" / "build" / "modules-pi" / "output" / "bin" / "forte"
 DOCKER = TOOLS / "pi"          # Dockerfile, compose.yaml, .dockerignore
 GPIOCHIP = "eclipse4diac::io::gpiochip::GPIOChip"
 PWMCHIP = "eclipse4diac::io::pwmsysfs::PWMChip"
@@ -100,7 +100,7 @@ def install(args):
     # containers mount are made first: docker compose makes a missing one as root's.
     ssh(args, "systemctl --user disable --now forte 2>/dev/null; rm -f ~/.config/systemd/user/forte.service; "
               "mkdir -p ~/forte/boot ~/forte/manifest && touch ~/forte/boot/forte.fboot")
-    # The image takes the binary as "forte", whatever the file is called here (runtime/bin/forte-aarch64).
+    # The image takes the binary as "forte", whatever the file is called here (forte-runtime's bin/forte-aarch64).
     subprocess.run(["scp", "-q", str(forte), f"{args.user}@{args.host}:forte/forte"], check=True)
     # From Windows the file arrives without its executable bit, and the image keeps the file's mode.
     ssh(args, "chmod 755 ~/forte/forte")
