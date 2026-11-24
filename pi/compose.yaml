@@ -1,0 +1,62 @@
+# FORTE on the Raspberry Pi. Copied to ~/forte on the Pi by deploy/pi.py install; there:
+#   docker compose up -d | stop | start | restart | logs -f | ps
+services:
+  forte:
+    build: .
+    image: forte-pi:3.3.0
+    container_name: forte
+    restart: unless-stopped          # comes back after a reboot unless stopped by hand
+    # FORTE runs under a shell that turns every PWM channel off (duty 0, disabled) once FORTE has
+    # ended, however it ended: FORTE 3.3.0 segfaults when it is stopped, so its own clean-up never
+    # ran and the stepper kept turning. Also once before FORTE starts, for a container that was
+    # killed with the motor running; FORTE sets up and enables its channels itself at its start.
+    # Only a SIGKILL of this shell (docker kill, a stop that outlasts stop_grace_period) skips it.
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        off() { for c in /hostsys/class/pwm/pwmchip*/pwm[0-9]*; do [ -d "$$c" ] && { echo 0 > "$$c/duty_cycle"; echo 0 > "$$c/enable"; }; done 2>/dev/null; }
+        off
+        /usr/local/bin/forte -c 0.0.0.0:61499 &
+        forte=$$!
+        trap 'kill -TERM $$forte 2>/dev/null' TERM INT
+        wait $$forte; status=$$?
+        while kill -0 $$forte 2>/dev/null; do wait $$forte; status=$$?; done
+        off
+        exit $$status
+    # Host network: OPC UA advertises the Pi's own address in its endpoints, and the management
+    # port (61499, no authentication: lab network only) and Modbus clients need no mapping.
+    network_mode: host
+    # FORTE announces its OPC UA server by mDNS (LDS-ME), which is how modreg serve --discover finds it.
+    # Registering at an OPC UA discovery server (LDS) besides is only done when FORTE_LDS_REGISTER is 1
+    # (forte-patches/0008): an LDS announces itself as opc.tcp://<host>.local:4840, which the static musl
+    # binary cannot resolve, and each try froze the OPC UA server for 5 s, every minute. With the LDS's
+    # name and address in .env (LDS_HOST, LDS_IP; deploy/pi.py install --lds HOST=IP) it registers there;
+    # without them the host entry is a harmless dummy.
+    environment:
+      FORTE_LDS_REGISTER: "${FORTE_LDS_REGISTER:-0}"
+    extra_hosts:
+      - "${LDS_HOST:-lds.invalid}:${LDS_IP:-127.0.0.1}"
+    devices:
+      # GPIO lines for GPIOChip (the container runs as root): the chip of the 40-pin header, as
+      # chip 0. runtime/install.sh writes which one it is to .env (4 on a Pi 5 with an older kernel).
+      - ${GPIOCHIP:-/dev/gpiochip0}:/dev/gpiochip0
+    volumes:
+      - ./boot:/forte                  # forte.fboot: the program FORTE loads at start
+      # PWM channels for FORTE's pwmsysfs module (PWMChip SysfsRoot /hostsys/class/pwm). Outside
+      # /sys, because the container's sysfs is read-only and AppArmor denies writes below /sys;
+      # the class entries link relatively into ../../devices, hence both folders.
+      - /sys/class/pwm:/hostsys/class/pwm
+      - /sys/devices/platform:/hostsys/devices/platform
+    stop_grace_period: 5s
+  manifest:
+    # What the module is delivered with: its profiles (modreg manifest), at
+    # http://<Pi>:8088/manifest.json, where the registration service fetches them once it has found
+    # FORTE's OPC UA server on the network (modreg serve --discover). deploy/pi.py module writes it.
+    image: busybox:1.36
+    container_name: manifest
+    restart: unless-stopped
+    network_mode: host
+    command: ["httpd", "-f", "-p", "8088", "-h", "/www"]
+    volumes:
+      - ./manifest:/www:ro
