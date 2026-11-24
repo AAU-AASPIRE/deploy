@@ -105,7 +105,7 @@ services:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
 
   xmpp:
-    # The XMPP server the line's agents talk through (line-agents, docs/agents.md); agents register
+    # The XMPP server the line's agents talk through (AAS-MAS); agents register
     # their accounts on first start. Lab network only: see prosody.cfg.lua.
     image: prosodyim/prosody:0.12
     container_name: lab-xmpp
@@ -239,7 +239,7 @@ services:
       context: ../..
       dockerfile: deploy/aas/services.Dockerfile
     container_name: lab-skill-service
-    command: ["modreg", "serve", "--basyx", "http://aas-environment:8081", "--ontology", "ontology/ARSO",
+    command: ["modreg", "serve", "--basyx", "http://aas-environment:8081", "--ontology", "ontologies/ARSO",
               "--store", "/data/registry"]
     ports:
       - "8090:8090"

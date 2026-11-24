@@ -18,7 +18,7 @@ python bench.py status --spec ../aseptic-line/cell/modules/capping.yaml
 ```
 
 The tools find the other repositories beside this one (`AAU-AASPIRE/<repo>`): the line's specs in
-`aseptic-line`, FORTE in `forte-runtime`, the DMP and the web UI for the stack's images. Still to do
-after the split of modreg, modsync, modplan and AAS-MAS: the services' and modpy's images built from
-those repositories (`aas/services.Dockerfile`, `modpy/Dockerfile` still copy the old repository's
-folders). Part of [AASPIRE](https://github.com/AAU-AASPIRE/aaspire).
+`aseptic-line`, FORTE in `forte-runtime`, the DMP (`aas-camel-dmp`) and the web UI
+(`basyx-aas-web-ui`) for the stack's images. The services' and modpy's images are built from the
+folder that holds the repositories (`aas/services.Dockerfile`, `modpy/Dockerfile`). Part of
+[AASPIRE](https://github.com/AAU-AASPIRE/aaspire).

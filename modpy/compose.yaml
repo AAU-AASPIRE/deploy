@@ -1,6 +1,7 @@
-# The robot modules on a Raspberry Pi, run in Python (modpy). On the Pi, in a clone of the
-# repository, with the modules' manifest made on the PC (modreg manifest
-# cell/modules/python/loading.yaml --out manifest.json) copied to deploy/modpy/manifest/:
+# The robot modules on a Raspberry Pi, run in Python (modpy). On the Pi, in a folder with the
+# repositories side by side (deploy, module-py, iec61499-skill-lib, aseptic-line), with the modules'
+# manifest made on the PC (modreg manifest cell/modules/python/loading.yaml --out manifest.json)
+# copied to deploy/modpy/manifest/:
 #   docker compose -f deploy/modpy/compose.yaml up -d --build | logs -f | ps
 # One OPC UA server for the modules this Pi runs, each below /Objects/<Module> (a manifest for
 # several holds all their profiles, with "module": null). Beside the planar controller, which has
