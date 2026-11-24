@@ -211,7 +211,8 @@ services:
         condition: service_healthy
 
   aas-web-ui:
-    # The fork's web UI with the ProcessSequence plugin, built from its working tree.
+    # The fork's web UI (AAU-AASPIRE/basyx-aas-web-ui) with the ProcessSequence plugin and the
+    # Configurator, built from its working tree beside this repository.
     image: basyx-aas-web-ui:processsequence
     build:
       context: ../../basyx-aas-web-ui/aas-web-ui
@@ -220,6 +221,14 @@ services:
     ports:
       - "3000:3000"
     environment:
+      # The Configurator (branch feat/configurator): its server side reads the AASs and InfluxDB.
+      CONFIGURATOR_COORDINATES_ENABLED: "true"
+      CONFIGURATOR_INFLUX_URL: http://influxdb:8086
+      CONFIGURATOR_INFLUX_ORG: ap2030
+      CONFIGURATOR_INFLUX_BUCKET: ap2030
+      CONFIGURATOR_INFLUX_TOKEN: ${INFLUX_TOKEN:?run aas.py up}
+      CONFIGURATOR_AAS_URL: http://aas-environment:8081
+      CONFIGURATOR_PUBLIC_URL: http://localhost:3000
       AAS_REGISTRY_PATH: http://localhost:8082/shell-descriptors
       SUBMODEL_REGISTRY_PATH: http://localhost:8083/submodel-descriptors
       AAS_REPO_PATH: http://localhost:8081/shells
