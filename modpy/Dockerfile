@@ -5,8 +5,8 @@
 FROM python:3.12-slim
 RUN pip install --no-cache-dir "pydantic>=2.9,<3" "pyyaml>=6,<7" "asyncua>=1.1" "zeroconf>=0.132"
 WORKDIR /modpy
-COPY iec61499-skill-lib/modgen modgen
-COPY module-py/modpy modpy
+COPY aaspire-tools/modgen modgen
+COPY aaspire-tools/modpy modpy
 COPY aseptic-line/cell/modules/python specs
 # OPC UA, and the manifest the registration service fetches (--manifest).
 EXPOSE 4840 8088

@@ -1,5 +1,5 @@
 # The robot modules on a Raspberry Pi, run in Python (modpy). On the Pi, in a folder with the
-# repositories side by side (deploy, module-py, iec61499-skill-lib, aseptic-line), with the modules'
+# repositories side by side (deploy, aaspire-tools, aseptic-line), with the modules'
 # manifest made on the PC (modreg manifest cell/modules/python/loading.yaml --out manifest.json)
 # copied to deploy/modpy/manifest/:
 #   docker compose -f deploy/modpy/compose.yaml up -d --build | logs -f | ps
