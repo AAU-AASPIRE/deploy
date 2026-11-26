@@ -1,11 +1,16 @@
 # The lab stack as one system: every repository it is built from, side by side as the workspace has them, brought up
 # with the simulated stations and checked by tests/test_stack.py (what one repository changes must not break how it
 # works with the others), and the DMP's compile check of aas-model's whole catalog (scripts/check_dmp_compiles_models.sh).
-# Nightly, by hand, and when a repository's main changes (repository_dispatch from it).
+# Nightly, by hand, and when a repository's main changes (repository_dispatch from it). By hand, `ref` names the branch of
+# aas-model, ontologies and aaspire-tools to test together (execution-model, while that work runs beside main).
 name: stack
 
 on:
   workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch of aas-model, ontologies and aaspire-tools"
+        default: main
   schedule:
     - cron: "0 2 * * *"
   repository_dispatch:
@@ -23,6 +28,7 @@ jobs:
         with:
           repository: AAU-AASPIRE/aas-model
           path: aas-model
+          ref: ${{ inputs.ref || 'main' }}
           submodules: recursive
       - uses: actions/checkout@v4
         with:
@@ -49,6 +55,7 @@ jobs:
         with:
           repository: AAU-AASPIRE/aas-model
           path: aas-model
+          ref: ${{ inputs.ref || 'main' }}
           submodules: recursive
       - uses: actions/checkout@v4
         with:
@@ -62,6 +69,7 @@ jobs:
         with:
           repository: AAU-AASPIRE/ontologies
           path: ontologies
+          ref: ${{ inputs.ref || 'main' }}
       - uses: actions/checkout@v4
         with:
           repository: AAU-AASPIRE/station-simulator
@@ -79,6 +87,7 @@ jobs:
         with:
           repository: AAU-AASPIRE/aaspire-tools
           path: aaspire-tools
+          ref: ${{ inputs.ref || 'main' }}
       - uses: actions/checkout@v4
         with:
           repository: AAU-AASPIRE/AAS-MAS
