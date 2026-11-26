@@ -1,6 +1,6 @@
 # The simulated PackML stations (AAU-AASPIRE/station-simulator beside this repository), added to the lab stack by
-# deploy/aas.py up --stations. They join the stack's network: the broker is mosquitto (alias hivemq-broker, as the
-# stations' AASs name it), the AASs are published by publish.py or the stack test. The camera station needs a camera:
+# deploy/aas.py up --stations. They join the stack's network: the broker is mosquitto, as the stations' AASs name
+# it, the AASs are published by publish.py or the stack test. The camera station needs a camera:
 # aas.py up --stations --camera.
 include:
   - path: ../../station-simulator/deployment/compose/stations-compose.yml

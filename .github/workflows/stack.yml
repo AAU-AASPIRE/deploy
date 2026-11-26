@@ -1,6 +1,7 @@
 # The lab stack as one system: every repository it is built from, side by side as the workspace has them, brought up
 # with the simulated stations and checked by tests/test_stack.py (what one repository changes must not break how it
-# works with the others). Nightly, by hand, and when a repository's main changes (repository_dispatch from it).
+# works with the others), and the DMP's compile check of aas-model's whole catalog (scripts/check_dmp_compiles_models.sh).
+# Nightly, by hand, and when a repository's main changes (repository_dispatch from it).
 name: stack
 
 on:
@@ -11,6 +12,32 @@ on:
     types: [component-changed]
 
 jobs:
+  dmp-compiles-models:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: deploy
+      - uses: actions/checkout@v4
+        with:
+          repository: AAU-AASPIRE/aas-model
+          path: aas-model
+          submodules: recursive
+      - uses: actions/checkout@v4
+        with:
+          repository: AAU-AASPIRE/aas-camel-dmp
+          path: aas-camel-dmp
+      - uses: actions/setup-java@v5
+        with:
+          java-version: "25"
+          distribution: temurin
+          cache: maven
+          cache-dependency-path: aas-camel-dmp/**/pom.xml
+      - uses: astral-sh/setup-uv@v6
+      - name: The DMP compiles every resource of aas-model's catalog
+        run: deploy/scripts/check_dmp_compiles_models.sh
+
   stack:
     runs-on: ubuntu-latest
     timeout-minutes: 60

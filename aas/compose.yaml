@@ -109,10 +109,7 @@ services:
     container_name: lab-mosquitto
     ports:
       - "1883:1883"
-    # The broker the PackML stations' AASs name (aas-model's BROKER, mqtt://hivemq-broker:1883).
-    networks:
-      default:
-        aliases: [hivemq-broker]
+    # The broker the PackML stations' AASs name (aas-model's BROKER, mqtt://mosquitto:1883).
     volumes:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
 

@@ -8,6 +8,7 @@ Deployment of an AASPIRE line: the server stack (BaSyx, MongoDB, Mosquitto, XMPP
 | The lab's AAS stack: BaSyx with MongoDB, Mosquitto, Prosody, InfluxDB, the DMP, the state store (included from `state-store`), the web UI, the skill service, the agents | `aas/compose.yaml`, `aas.py` (`up`, `status`, `rows`, `down`) |
 | The simulated PackML stations (included from `station-simulator`) | `aas/stations.yaml`, `aas.py up --stations` |
 | The stack as one system: the state store and its vocabulary, every mapping installed, a skill call from BaSyx through the DMP to a station with its state in the store, the web UI | `tests/test_stack.py` (`pytest tests/test_stack.py --stack --stations` on a stack that is up); nightly and on demand in CI (`.github/workflows/stack.yml`) |
+| Does the DMP compile every resource aas-model authors (aas-model's catalog through aas-camel-dmp's contract test); in CI with the stack test | `scripts/check_dmp_compiles_models.sh` (uv, Maven, JDK 25) |
 | Publish every AAS of the line (aas-model's instances, the example line, the modules on their Pis) | `publish.py` |
 | A module's Raspberry Pi: FORTE's container (installed by forte-runtime's `install.sh`), install, run the module, its log | `pi/`, `pi.py` |
 | At the bench: status, homing, moves and skills with a watchdog; the stepper's test | `bench.py`, `steptest.py` |
