@@ -1,7 +1,9 @@
-"""The lab's AAS stack on this computer (aas/compose.yaml): BaSyx, the DMP, InfluxDB, the skill service.
+"""The lab's AAS stack on this computer (aas/compose.yaml): BaSyx, the DMP, InfluxDB, the state store, the skill service.
 
     python aas.py up          # write the secrets to aas/.env if there are none, start it all
     python aas.py up --agents # ... with the line's agents (the multi-agent orchestrator)
+    python aas.py up --stations          # ... with the simulated PackML stations (station-simulator, aas/stations.yaml)
+    python aas.py up --stations --camera # ... and the inspection station, which needs a camera
     python aas.py status      # the containers, and what the DMP made of the AIMCs
     python aas.py status FillingModuleAAS    # ... and why each of its mappings that does not run does not
     python aas.py rows FillingModuleAAS      # the latest row of each of a module's time series
@@ -10,6 +12,7 @@
 
 Web UI http://localhost:3000, AAS environment http://localhost:8081, DMP http://localhost:8085,
 InfluxDB http://localhost:8086 (user admin; password and token in aas/.env, never committed),
+the state store http://localhost:7878 (SPARQL: /query, /update),
 skill service http://localhost:8090 (the web UI's matching and planning), with --agents their orders
 at http://localhost:8095/orders and XMPP on 5222.
 
@@ -38,8 +41,12 @@ INFLUX = "http://localhost:8086"
 BUCKET = "ap2030"
 
 
-def compose(*args: str) -> None:
-    subprocess.run(["docker", "compose", "-f", str(STACK / "compose.yaml"), *args], check=True)
+STATIONS = STACK / "stations.yaml"
+
+
+def compose(*args: str, stations: bool = False) -> None:
+    files = ["-f", str(STACK / "compose.yaml"), *(["-f", str(STATIONS)] if stations else [])]
+    subprocess.run(["docker", "compose", *files, *args], check=True)
 
 
 def agents_secret() -> str:
@@ -76,11 +83,13 @@ def up(args) -> None:
                        encoding="utf-8")
         print(f"Wrote new secrets to {ENV}")
     keep("LINEAGENTS_SECRET", agents_secret())
-    compose(*(["--profile", "agents"] if args.agents else []), "up", "-d", "--build")
+    profiles = [*(["--profile", "agents"] if args.agents else []), *(["--profile", "camera"] if args.camera else [])]
+    compose(*profiles, "up", "-d", "--build", stations=args.stations or args.camera)
 
 
 def down(args) -> None:
-    compose("--profile", "agents", "down")          # the agents too, if they run
+    # The agents and the stations too, if they run.
+    compose("--profile", "agents", "--profile", "camera", "down", "--remove-orphans", stations=True)
 
 
 def logs(args) -> None:
@@ -142,6 +151,9 @@ def main():
         sub.set_defaults(fn=fn)
         if name == "up":
             sub.add_argument("--agents", action="store_true", help="also start the line's agents (profile agents)")
+            sub.add_argument("--stations", action="store_true",
+                             help="also start the simulated PackML stations (station-simulator beside this repository)")
+            sub.add_argument("--camera", action="store_true", help="also the inspection station, which needs a camera")
         if name == "status":
             sub.add_argument("asset", nargs="?", help="an AAS idShort (or its AIMC's id): why its mappings do not run")
         if name == "logs":

@@ -1,0 +1,98 @@
+# The lab stack as one system: every repository it is built from, side by side as the workspace has them, brought up
+# with the simulated stations and checked by tests/test_stack.py (what one repository changes must not break how it
+# works with the others). Nightly, by hand, and when a repository's main changes (repository_dispatch from it).
+#
+# The other repositories are checked out with AASPIRE_CHECKOUT_TOKEN (a fine-grained token or GitHub App of the
+# organization with read access to its repositories); without it only public repositories can be.
+name: stack
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 2 * * *"
+  repository_dispatch:
+    types: [component-changed]
+
+jobs:
+  stack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: deploy
+      - uses: actions/checkout@v4
+        with:
+          repository: AAU-AASPIRE/aas-model
+          path: aas-model
+          submodules: recursive
+          token: ${{ secrets.AASPIRE_CHECKOUT_TOKEN || github.token }}
+      - uses: actions/checkout@v4
+        with:
+          repository: AAU-AASPIRE/aas-camel-dmp
+          path: aas-camel-dmp
+          token: ${{ secrets.AASPIRE_CHECKOUT_TOKEN || github.token }}
+      - uses: actions/checkout@v4
+        with:
+          repository: AAU-AASPIRE/state-store
+          path: state-store
+          token: ${{ secrets.AASPIRE_CHECKOUT_TOKEN || github.token }}
+      - uses: actions/checkout@v4
+        with:
+          repository: AAU-AASPIRE/ontologies
+          path: ontologies
+          token: ${{ secrets.AASPIRE_CHECKOUT_TOKEN || github.token }}
+      - uses: actions/checkout@v4
+        with:
+          repository: AAU-AASPIRE/station-simulator
+          path: station-simulator
+          token: ${{ secrets.AASPIRE_CHECKOUT_TOKEN || github.token }}
+      - uses: actions/checkout@v4
+        with:
+          repository: AAU-AASPIRE/basyx-aas-web-ui
+          path: basyx-aas-web-ui
+          ref: feat/configurator
+          token: ${{ secrets.AASPIRE_CHECKOUT_TOKEN || github.token }}
+      - uses: actions/checkout@v4
+        with:
+          repository: AAU-AASPIRE/iec61499-mgmt-py
+          path: iec61499-mgmt-py
+          token: ${{ secrets.AASPIRE_CHECKOUT_TOKEN || github.token }}
+      - uses: actions/checkout@v4
+        with:
+          repository: AAU-AASPIRE/aaspire-tools
+          path: aaspire-tools
+          token: ${{ secrets.AASPIRE_CHECKOUT_TOKEN || github.token }}
+      - uses: actions/checkout@v4
+        with:
+          repository: AAU-AASPIRE/AAS-MAS
+          path: AAS-MAS
+          token: ${{ secrets.AASPIRE_CHECKOUT_TOKEN || github.token }}
+      - uses: actions/checkout@v4
+        with:
+          repository: AAU-AASPIRE/aseptic-line
+          path: aseptic-line
+          token: ${{ secrets.AASPIRE_CHECKOUT_TOKEN || github.token }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: The stack's secrets
+        run: printf "INFLUX_PASSWORD=%s\nINFLUX_TOKEN=%s\n" "$(openssl rand -hex 12)" "$(openssl rand -hex 24)" > deploy/aas/.env
+      - name: Up, with the stations
+        working-directory: deploy/aas
+        run: docker compose -f compose.yaml -f stations.yaml up -d --build --wait --wait-timeout 600
+      - name: The stack test
+        working-directory: deploy
+        env:
+          MQTT_SCHEMAS_DIR: ${{ github.workspace }}/aas-model/MQTTSchemas
+        run: |
+          python -m pip install --quiet pytest pyyaml -e ../aas-model
+          python -m pytest tests/test_stack.py --stack --stations -v
+      - name: Logs on failure
+        if: failure()
+        working-directory: deploy/aas
+        run: docker compose -f compose.yaml -f stations.yaml logs --tail 200
+      - name: Down
+        if: always()
+        working-directory: deploy/aas
+        run: docker compose -f compose.yaml -f stations.yaml down -v

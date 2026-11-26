@@ -6,8 +6,8 @@ line, and the modules on their Pis.
     python publish.py --url http://<server>:8081     # the lab's server: only with the user's go
 
 1. aas-model: the lab's resources as aas-model writes them (``aas_model.resource_instances``,
-   ``RESOURCE_FACTORIES``): the stations of the industrial line (Syntegon, Cytiva, IMA, Optima,
-   Omron), the planar table and its shuttles, the filling line, the orchestrator and the planner.
+   ``RESOURCE_FACTORIES``): the stations of the industrial line (loading, dispensing, stoppering,
+   capping, inspection, unloading), the planar table and its shuttles, the filling line, the orchestrator and the planner.
 2. line: the example line (``cell/examples/example_line.py``): the line, the planar table and its
    shuttles as the controller describes them, the modules and their components, the products and
    their processes, each process checked. The modules are described for their Pis (``--target pi``),
@@ -32,7 +32,11 @@ sys.path.insert(0, str(LINE / "cell" / "examples"))
 
 from basyx.aas.adapter.json import json_serialization          # noqa: E402
 
-from aas_pydantic.convert_util import strip_temp_id_short_attributes   # noqa: E402
+try:                                                            # aas-model before the merge of 26 Nov
+    from aas_pydantic.convert_util import strip_temp_id_short_attributes   # noqa: E402
+except ImportError:                                             # the merged aas-model needs no stripping
+    def strip_temp_id_short_attributes(store):                  # noqa: E302
+        return store
 
 from aas_model.builder import build_from_model                 # noqa: E402
 from aas_model.resource_instances import RESOURCE_FACTORIES     # noqa: E402

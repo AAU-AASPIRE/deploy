@@ -4,6 +4,8 @@ import socket
 
 def pytest_addoption(parser):
     parser.addoption("--pi-forte-exe", help="aarch64 FORTE (forte-runtime's build-modules.ps1 -Config pi/modules-pi) for tests/test_pwm_emulated.py")
+    parser.addoption("--stack", action="store_true", help="tests/test_stack.py: the lab stack is up (aas.py up)")
+    parser.addoption("--stations", action="store_true", help="tests/test_stack.py: with the stations (aas.py up --stations)")
 
 
 def free_port():

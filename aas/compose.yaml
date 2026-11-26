@@ -6,7 +6,15 @@
 #   client --invoke--> aas-environment --delegates--> dmp --OPC UA method--> module (FORTE)
 #   module --OPC UA monitored items--> dmp --rows--> influxdb (the series the Variables name)
 #   aas-environment --submodel events (MQTT)--> dmp: it builds its routes from the AIMCs it reads
+#   module --state--> dmp --SPARQL update--> state-store (the variables the Knowledge of each AAS declares)
 name: lab-aas
+
+# The state store (AAU-AASPIRE/state-store beside this repository): the line's current symbolic state, which the DMP
+# writes observed state into and the planners and the behaviour tree read. Its own repository so that each stack
+# includes the same one; its settings here: state-store.env.
+include:
+  - path: ../../state-store/compose.yaml
+    env_file: ./state-store.env
 
 # Where BaSyx keeps its data: the MongoDB below. BaSyx 2.0.0-milestone-16 runs on Spring Boot 4,
 # which reads spring.mongodb.*; Spring Boot 3 (older BaSyx images) read spring.data.mongodb.*.
@@ -101,6 +109,10 @@ services:
     container_name: lab-mosquitto
     ports:
       - "1883:1883"
+    # The broker the PackML stations' AASs name (aas-model's BROKER, mqtt://hivemq-broker:1883).
+    networks:
+      default:
+        aliases: [hivemq-broker]
     volumes:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
 
@@ -196,6 +208,8 @@ services:
       DMP_INFLUX_URL: http://influxdb:8086
       DMP_INFLUX_ORG: ap2030
       DMP_INFLUX_TOKEN: ${INFLUX_TOKEN:?run deploy/aas.py up, which writes it to .env}
+      # Observed state into the state store: each Knowledge's Target names http://state-store:7878.
+      DMP_STATE_STORE_UPDATE_URL: http://state-store:7878/update
     # A module simulated on this computer is reached as host.docker.internal.
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -209,6 +223,8 @@ services:
         condition: service_started
       influxdb:
         condition: service_healthy
+      state-store:
+        condition: service_started
 
   aas-web-ui:
     # The fork's web UI (AAU-AASPIRE/basyx-aas-web-ui) with the ProcessSequence plugin and the
@@ -219,7 +235,7 @@ services:
       dockerfile: ../examples/ProcessSequence/Dockerfile
     container_name: lab-aas-web-ui
     ports:
-      - "3000:3000"
+      - "${WEB_UI_PORT:-3000}:3000"
     environment:
       # The Configurator (branch feat/configurator): its server side reads the AASs and InfluxDB.
       CONFIGURATOR_COORDINATES_ENABLED: "true"
@@ -229,6 +245,12 @@ services:
       CONFIGURATOR_INFLUX_TOKEN: ${INFLUX_TOKEN:?run aas.py up}
       CONFIGURATOR_AAS_URL: http://aas-environment:8081
       CONFIGURATOR_PUBLIC_URL: http://localhost:3000
+      # The AIMC plugin: what the DMP made of each mapping (its status and diagnostics), proxied read-only.
+      DMP_STATUS_URL: http://dmp:8080/management/status
+      DMP_MAPPINGS_URL: http://dmp:8080/management/mappings
+      # The TimeSeries plugin: the LinkedSegments' query API on InfluxDB, the token added by the proxy.
+      INFLUXDB_PROXY_ORIGIN: http://influxdb:8086
+      INFLUXDB_PROXY_TOKEN: ${INFLUX_TOKEN:?run aas.py up}
       AAS_REGISTRY_PATH: http://localhost:8082/shell-descriptors
       SUBMODEL_REGISTRY_PATH: http://localhost:8083/submodel-descriptors
       AAS_REPO_PATH: http://localhost:8081/shells
