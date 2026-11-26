@@ -1,9 +1,6 @@
 # The lab stack as one system: every repository it is built from, side by side as the workspace has them, brought up
 # with the simulated stations and checked by tests/test_stack.py (what one repository changes must not break how it
 # works with the others). Nightly, by hand, and when a repository's main changes (repository_dispatch from it).
-#
-# The other repositories are checked out with AASPIRE_CHECKOUT_TOKEN (a fine-grained token or GitHub App of the
-# organization with read access to its repositories); without it only public repositories can be.
 name: stack
 
 on:
@@ -26,53 +23,43 @@ jobs:
           repository: AAU-AASPIRE/aas-model
           path: aas-model
           submodules: recursive
-          token: ${{ secrets.AASPIRE_CHECKOUT_TOKEN || github.token }}
       - uses: actions/checkout@v4
         with:
           repository: AAU-AASPIRE/aas-camel-dmp
           path: aas-camel-dmp
-          token: ${{ secrets.AASPIRE_CHECKOUT_TOKEN || github.token }}
       - uses: actions/checkout@v4
         with:
           repository: AAU-AASPIRE/state-store
           path: state-store
-          token: ${{ secrets.AASPIRE_CHECKOUT_TOKEN || github.token }}
       - uses: actions/checkout@v4
         with:
           repository: AAU-AASPIRE/ontologies
           path: ontologies
-          token: ${{ secrets.AASPIRE_CHECKOUT_TOKEN || github.token }}
       - uses: actions/checkout@v4
         with:
           repository: AAU-AASPIRE/station-simulator
           path: station-simulator
-          token: ${{ secrets.AASPIRE_CHECKOUT_TOKEN || github.token }}
       - uses: actions/checkout@v4
         with:
           repository: AAU-AASPIRE/basyx-aas-web-ui
           path: basyx-aas-web-ui
           ref: feat/configurator
-          token: ${{ secrets.AASPIRE_CHECKOUT_TOKEN || github.token }}
       - uses: actions/checkout@v4
         with:
           repository: AAU-AASPIRE/iec61499-mgmt-py
           path: iec61499-mgmt-py
-          token: ${{ secrets.AASPIRE_CHECKOUT_TOKEN || github.token }}
       - uses: actions/checkout@v4
         with:
           repository: AAU-AASPIRE/aaspire-tools
           path: aaspire-tools
-          token: ${{ secrets.AASPIRE_CHECKOUT_TOKEN || github.token }}
       - uses: actions/checkout@v4
         with:
           repository: AAU-AASPIRE/AAS-MAS
           path: AAS-MAS
-          token: ${{ secrets.AASPIRE_CHECKOUT_TOKEN || github.token }}
       - uses: actions/checkout@v4
         with:
           repository: AAU-AASPIRE/aseptic-line
           path: aseptic-line
-          token: ${{ secrets.AASPIRE_CHECKOUT_TOKEN || github.token }}
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
