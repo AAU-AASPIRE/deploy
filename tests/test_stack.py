@@ -33,7 +33,7 @@ import pytest
 AAS = os.environ.get("AAS_URL", "http://localhost:8081")
 DMP = os.environ.get("DMP_URL", "http://localhost:8085")
 STORE = os.environ.get("STATE_STORE_URL", "http://localhost:7878")
-WEB_UI = os.environ.get("WEB_UI_URL", "http://localhost:3000")
+WEB_UI = os.environ.get("WEB_UI_URL", f"http://localhost:{os.environ.get('WEB_UI_PORT', '3000')}")
 BASE = "https://smartproductionlab.aau.dk"
 LAB = f"{BASE}/semantics/"
 STATION = f"{BASE}/aas/LoadingStationAAS"

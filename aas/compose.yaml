@@ -241,7 +241,7 @@ services:
       CONFIGURATOR_INFLUX_BUCKET: ap2030
       CONFIGURATOR_INFLUX_TOKEN: ${INFLUX_TOKEN:?run aas.py up}
       CONFIGURATOR_AAS_URL: http://aas-environment:8081
-      CONFIGURATOR_PUBLIC_URL: http://localhost:3000
+      CONFIGURATOR_PUBLIC_URL: http://localhost:${WEB_UI_PORT:-3000}
       # The AIMC plugin: what the DMP made of each mapping (its status and diagnostics), proxied read-only.
       DMP_STATUS_URL: http://dmp:8080/management/status
       DMP_MAPPINGS_URL: http://dmp:8080/management/mappings
